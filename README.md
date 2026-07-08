@@ -4,10 +4,26 @@ This repo is a take-home assignment artifact for mapping whether 100 requested a
 
 ## Deliverable
 
-- `index.html` is the single-page case study reviewers can open directly.
-- `data/apps.tsv` is the 100-app research matrix with category, auth, access gate, API surface, MCP signal, verdict, blocker, and evidence URL.
-- `data/verification.tsv` is the hand-check sample that records first-pass misses and final corrections.
-- `research_agent.py` regenerates the HTML from the structured data.
+- **Live case study:** [imkumar80.github.io/Composio-research-agent](https://imkumar80.github.io/Composio-research-agent/)
+- `index.html` — single-page case study (patterns, agent, verification, 100-app matrix)
+- `data/apps.tsv` — full research matrix
+- `data/verification.tsv` — hand-check sample with hits and misses
+- `research_agent.py` — runnable Composio + Gemini research agent
+
+## Deploy the case study
+
+Pushes to `main` auto-deploy via GitHub Actions (`.github/workflows/pages.yml`).
+
+Manual deploy:
+
+```bash
+python generate_case_study.py
+git add index.html
+git commit -m "Update case study"
+git push
+```
+
+Then enable **GitHub Pages → Source: GitHub Actions** in repo settings (one-time).
 
 ## Run
 
