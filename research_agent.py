@@ -107,22 +107,26 @@ async def run_real():
     """
 
     if GEMINI_API_KEY:
-        print("[*] Initializing Google Gemini with Composio...")
-        from google import genai
-        from composio_google import ComposioToolSet as GoogleComposioToolSet, App
+        print("[*] Initializing Google ADK Agent with Composio...")
+        from google_adk import Agent, Runner
+        from composio_google_adk import ComposioToolSet as GoogleComposioToolSet, App
         
-        client = genai.Client(api_key=GEMINI_API_KEY)
         toolset = GoogleComposioToolSet(api_key=COMPOSIO_API_KEY)
         tools = toolset.get_tools(apps=[App.FIRECRAWL])
 
+        # ADK natively runs the tool loop!
+        agent = Agent(
+            model="gemini-2.5-flash",
+            tools=tools,
+            system_instruction=SYSTEM_PROMPT
+        )
+        runner = Runner(agent)
+
         for app in APPS_TO_RESEARCH:
-            print(f"[*] Querying Gemini for: {app}")
-            response = client.models.generate_content(
-                model='gemini-2.5-flash',
-                contents=f"{SYSTEM_PROMPT}\n\nResearch the developer API for: {app}",
-                config=genai.types.GenerateContentConfig(tools=tools)
-            )
-            print(f"[OK] Result for {app}: {response.text}")
+            print(f"[*] Querying ADK Runner for: {app}")
+            response = runner.run(f"Research the developer API for: {app}")
+            # The runner's response object holds the final string output
+            print(f"[OK] Result for {app}: {response.text if hasattr(response, 'text') else str(response)}")
             
     elif OPENAI_API_KEY:
         print("[*] Initializing OpenAI with Composio...")
