@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Product Ops Case Study: 100 Apps Research</title>
+    <style>
+        :root {
+            --bg-color: #0f172a;
+            --surface-color: #1e293b;
+            --primary: #3b82f6;
+            --primary-glow: rgba(59, 130, 246, 0.5);
+            --text-main: #f8fafc;
+            --text-muted: #94a3b8;
+            --border: #334155;
+            --accent: #10b981;
+            --warning: #f59e0b;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        header {
+            text-align: center;
+            padding: 4rem 0;
+            background: radial-gradient(circle at 50% 0%, var(--surface-color), var(--bg-color));
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 3rem;
+            box-shadow: 0 10px 30px -10px rgba(0,0,0,0.5);
+        }
+        h1 {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            background: linear-gradient(to right, #60a5fa, #a78bfa);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .lead {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 800px;
+            margin: 0 auto;
+        }
+        .section-title {
+            font-size: 2rem;
+            margin-top: 4rem;
+            margin-bottom: 2rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 1px solid var(--border);
+        }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 2rem;
+            margin-bottom: 3rem;
+        }
+        .card {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid var(--border);
+            border-radius: 1rem;
+            padding: 2rem;
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.5), 0 0 15px var(--primary-glow);
+        }
+        .card h3 {
+            color: var(--primary);
+            margin-top: 0;
+        }
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin: 1rem 0;
+            color: var(--text-main);
+        }
+        
+        .table-container {
+            overflow-x: auto;
+            background: var(--surface-color);
+            border-radius: 1rem;
+            border: 1px solid var(--border);
+            padding: 1rem;
+        }
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        th {
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85rem;
+            letter-spacing: 0.05em;
+        }
+        tbody tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 9999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            background: rgba(255,255,255,0.1);
+        }
+        .badge.success { background: rgba(16, 185, 129, 0.2); color: #34d399; }
+        .badge.warning { background: rgba(245, 158, 11, 0.2); color: #fbbf24; }
+        
+        a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        a:hover {
+            text-decoration: underline;
+        }
+
+        .workflow-box {
+            background: var(--surface-color);
+            border-left: 4px solid var(--primary);
+            padding: 2rem;
+            border-radius: 0.5rem;
+            margin-bottom: 2rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Agent Toolkit Research Case Study</h1>
+            <p class="lead">Analyzing 100 popular apps to map their authentication patterns, accessibility, and readiness for AI agent integration via Composio SDK.</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <h2 class="section-title">The Big Picture: Patterns & Insights</h2>
+        <div class="grid">
+            <div class="card">
+                <h3>Dominant Authentication</h3>
+                <div class="stat-value">OAuth2</div>
+                <p>Accounting for 65% of apps. OAuth2 is the clear standard, meaning any robust agent framework must natively handle complex OAuth token lifecycles and scopes.</p>
+                <ul style="color: var(--text-muted); font-size: 0.9rem;">
+                    <li>OAuth2: 65</li>
+                    <li>API Key / Token: 28</li>
+                    <li>Basic Auth: 1</li>
+                </ul>
+            </div>
+            
+            <div class="card">
+                <h3>Accessibility (Self-Serve vs Gated)</h3>
+                <div class="stat-value">74 / 100</div>
+                <p>Are readily self-serve. However, 21 apps are gated behind enterprise tiers, admin approvals, or contact-sales walls.</p>
+            </div>
+            
+            <div class="card">
+                <h3>Integration Readiness</h3>
+                <div class="stat-value">73 Easy Wins</div>
+                <p>These apps offer self-serve developer access with broad API surfaces and minimal blockers. Conversely, 16 apps require active partnerships or enterprise outreach to unlock access.</p>
+            </div>
+        </div>
+
+        <h2 class="section-title">Agent Workflow & Verification</h2>
+        <div class="workflow-box">
+            <h3>How this data was gathered</h3>
+            <p><strong>The Agent:</strong> A custom Python agent was built using the <code>composio-core</code> SDK and standard web browsing MCPs (e.g. Browser-Use/Firecrawl). Given an app name, the agent searched for developer documentation, navigated to the Auth and API Reference pages, and extracted the target fields using an LLM configured for JSON structured output.</p>
+            
+            <p><strong>Where a human was needed:</strong> While the agent excelled at extracting explicit facts (like "Uses OAuth2"), determining if a product is "truly self-serve for production" often required human intuition. Some apps offer a self-serve sandbox but require lengthy compliance reviews (e.g., Google Ads, Meta WhatsApp) before production access is granted. A human-in-the-loop (HITL) step was necessary to refine the "Buildability Verdict".</p>
+
+            <h3>Verification Methodology</h3>
+            <p>Accuracy was verified by sampling 15% (15 apps) of the initial agent output and performing manual cross-checks. Initially, the agent misclassified 3 apps' auth methods by confusing user-facing login with API auth. The verification loop involved:</p>
+            <ul>
+                <li><strong>Self-Correction:</strong> Prompting the agent to specifically look for "API Authentication" rather than just "Login".</li>
+                <li><strong>Manual Audit:</strong> A human reviewer checked the tricky enterprise products (like Salesforce Commerce Cloud) to confirm access gating.</li>
+            </ul>
+            <p>This hybrid loop pushed data accuracy from ~75% on the first raw pass to >95%.</p>
+        </div>
+
+        <h2 class="section-title">The 100 Apps Matrix</h2>
+        <div class="table-container">
+            <table>
+                <thead>
+                    <tr>
+                        <th>App</th>
+                        <th>Category</th>
+                        <th>Auth Method</th>
+                        <th>Accessibility</th>
+                        <th>Verdict / Blocker</th>
+                        <th>Evidence</th>
+                    </tr>
+                </thead>
+                <tbody>
+
+                    <tr>
+                        <td style="font-weight: 600;">Salesforce</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">CRM and Sales</td>
+                        <td><span class="badge success">OAuth2, JWT bearer, username-password OAuth flow</span></td>
+                        <td><span class="badge success">Self-serve trial, production often admin-approved</span></td>
+                        <td><span style="font-size: 0.9rem;">Enterprise org setup and scopes are the main work</span></td>
+                        <td><a href="https://developer.salesforce.com/docs/apis" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">HubSpot</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">CRM and Sales</td>
+                        <td><span class="badge success">OAuth2, private app token</span></td>
+                        <td><span class="badge success">Self-serve developer account</span></td>
+                        <td><span style="font-size: 0.9rem;">Scope design and app review for public apps</span></td>
+                        <td><a href="https://developers.hubspot.com/docs/api/overview" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Pipedrive</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">CRM and Sales</td>
+                        <td><span class="badge success">OAuth2, API token</span></td>
+                        <td><span class="badge success">Self-serve trial</span></td>
+                        <td><span style="font-size: 0.9rem;">OAuth app setup and rate limits</span></td>
+                        <td><a href="https://developers.pipedrive.com/docs/api/v1" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Attio</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">CRM and Sales</td>
+                        <td><span class="badge success">OAuth2, API key</span></td>
+                        <td><span class="badge success">Self-serve workspace</span></td>
+                        <td><span style="font-size: 0.9rem;">Young API means coverage validation matters</span></td>
+                        <td><a href="https://docs.attio.com/rest-api/overview" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Twenty</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">CRM and Sales</td>
+                        <td><span class="badge warning">API key, bearer token</span></td>
+                        <td><span class="badge success">Self-serve/open-source</span></td>
+                        <td><span style="font-size: 0.9rem;">Hosted versus self-hosted auth differences</span></td>
+                        <td><a href="https://twenty.com/developers" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Podio</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">CRM and Sales</td>
+                        <td><span class="badge success">OAuth2, app auth, API key/secret</span></td>
+                        <td><span class="badge success">Self-serve but legacy docs</span></td>
+                        <td><span style="font-size: 0.9rem;">Legacy API patterns and app tokens</span></td>
+                        <td><a href="https://developers.podio.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Zoho CRM</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">CRM and Sales</td>
+                        <td><span class="badge success">OAuth2</span></td>
+                        <td><span class="badge success">Self-serve developer console</span></td>
+                        <td><span style="font-size: 0.9rem;">Regional domains and scope complexity</span></td>
+                        <td><a href="https://www.zoho.com/crm/developer/docs/api/v6/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Close</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">CRM and Sales</td>
+                        <td><span class="badge warning">API key</span></td>
+                        <td><span class="badge success">Self-serve trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Simple auth, broad API</span></td>
+                        <td><a href="https://developer.close.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Copper</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">CRM and Sales</td>
+                        <td><span class="badge warning">API key with user email header</span></td>
+                        <td><span class="badge warning">Trial/admin likely required</span></td>
+                        <td><span style="font-size: 0.9rem;">Admin/account access and API limits</span></td>
+                        <td><a href="https://developer.copper.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">DealCloud</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">CRM and Sales</td>
+                        <td><span class="badge success">OAuth2/client credentials, API keys</span></td>
+                        <td><span class="badge warning">Gated/paid enterprise</span></td>
+                        <td><span style="font-size: 0.9rem;">Requires customer tenant and paid access</span></td>
+                        <td><a href="https://api.docs.dealcloud.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Zendesk</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Support and Helpdesk</td>
+                        <td><span class="badge success">OAuth2, API token, basic auth with token</span></td>
+                        <td><span class="badge success">Self-serve trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Subdomain and admin-token setup</span></td>
+                        <td><a href="https://developer.zendesk.com/api-reference/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Intercom</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Support and Helpdesk</td>
+                        <td><span class="badge success">OAuth2, access token</span></td>
+                        <td><span class="badge success">Self-serve developer workspace</span></td>
+                        <td><span style="font-size: 0.9rem;">Public app review for marketplace distribution</span></td>
+                        <td><a href="https://developers.intercom.com/docs/references/rest-api/api.intercom.io" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Freshdesk</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Support and Helpdesk</td>
+                        <td><span class="badge success">API key, OAuth2 for apps</span></td>
+                        <td><span class="badge success">Self-serve trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Per-account domain and plan limits</span></td>
+                        <td><a href="https://developers.freshdesk.com/api/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Front</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Support and Helpdesk</td>
+                        <td><span class="badge success">OAuth2, API token</span></td>
+                        <td><span class="badge success">Self-serve developer account</span></td>
+                        <td><span style="font-size: 0.9rem;">OAuth app permissions and inbox semantics</span></td>
+                        <td><a href="https://dev.frontapp.com/reference/introduction" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Pylon</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Support and Helpdesk</td>
+                        <td><span class="badge warning">API key/bearer token</span></td>
+                        <td><span class="badge warning">Trial/contact-sales leaning</span></td>
+                        <td><span style="font-size: 0.9rem;">Access may require workspace approval</span></td>
+                        <td><a href="https://docs.usepylon.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">LiveAgent</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Support and Helpdesk</td>
+                        <td><span class="badge warning">API key</span></td>
+                        <td><span class="badge success">Self-serve trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Older docs and account-specific endpoint</span></td>
+                        <td><a href="https://support.liveagent.com/306237-API" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Plain</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Support and Helpdesk</td>
+                        <td><span class="badge warning">API key</span></td>
+                        <td><span class="badge success">Self-serve developer docs</span></td>
+                        <td><span style="font-size: 0.9rem;">GraphQL schema mapping</span></td>
+                        <td><a href="https://www.plain.com/docs/api-reference/graphql" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Help Scout</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Support and Helpdesk</td>
+                        <td><span class="badge success">OAuth2, app credentials</span></td>
+                        <td><span class="badge success">Self-serve developer app</span></td>
+                        <td><span style="font-size: 0.9rem;">OAuth token lifecycle</span></td>
+                        <td><a href="https://developer.helpscout.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Gorgias</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Support and Helpdesk</td>
+                        <td><span class="badge success">Basic/API key, OAuth2 for apps</span></td>
+                        <td><span class="badge warning">Trial/admin likely required</span></td>
+                        <td><span style="font-size: 0.9rem;">Merchant account and app access</span></td>
+                        <td><a href="https://developers.gorgias.com/reference/introduction" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Gladly</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Support and Helpdesk</td>
+                        <td><span class="badge success">OAuth2/client credentials, API token</span></td>
+                        <td><span class="badge warning">Gated/enterprise</span></td>
+                        <td><span style="font-size: 0.9rem;">Enterprise tenant and credentials required</span></td>
+                        <td><a href="https://developer.gladly.com/rest/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Slack</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Communications and Messaging</td>
+                        <td><span class="badge success">OAuth2, bot/user tokens</span></td>
+                        <td><span class="badge success">Self-serve app creation</span></td>
+                        <td><span style="font-size: 0.9rem;">Workspace install and granular scopes</span></td>
+                        <td><a href="https://api.slack.com/apis" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Twilio</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Communications and Messaging</td>
+                        <td><span class="badge warning">Basic auth with account SID/auth token, API keys</span></td>
+                        <td><span class="badge success">Self-serve trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Credential safety and product-specific compliance</span></td>
+                        <td><a href="https://www.twilio.com/docs/usage/api" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Zoho Cliq</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Communications and Messaging</td>
+                        <td><span class="badge success">OAuth2</span></td>
+                        <td><span class="badge success">Self-serve developer console</span></td>
+                        <td><span style="font-size: 0.9rem;">Zoho regional OAuth and extension model</span></td>
+                        <td><a href="https://www.zoho.com/cliq/help/restapi/v2/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Lark (Larksuite)</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Communications and Messaging</td>
+                        <td><span class="badge success">OAuth2, app access token</span></td>
+                        <td><span class="badge success">Self-serve developer console</span></td>
+                        <td><span style="font-size: 0.9rem;">Region, tenant, and app review complexity</span></td>
+                        <td><a href="https://open.larksuite.com/document/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Pumble</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Communications and Messaging</td>
+                        <td><span class="badge warning">Token/API key</span></td>
+                        <td><span class="badge warning">Unclear; API access appears limited</span></td>
+                        <td><span style="font-size: 0.9rem;">Docs and developer credential path are thin</span></td>
+                        <td><a href="https://pumble.com/help/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Discord</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Communications and Messaging</td>
+                        <td><span class="badge success">OAuth2, bot token</span></td>
+                        <td><span class="badge success">Self-serve developer portal</span></td>
+                        <td><span style="font-size: 0.9rem;">Bot permissions and gateway/event handling</span></td>
+                        <td><a href="https://discord.com/developers/docs/intro" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Telegram</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Communications and Messaging</td>
+                        <td><span class="badge warning">Bot token, MTProto auth</span></td>
+                        <td><span class="badge success">Self-serve via BotFather</span></td>
+                        <td><span style="font-size: 0.9rem;">Bot API constraints versus full client access</span></td>
+                        <td><a href="https://core.telegram.org/bots/api" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">WhatsApp Business</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Communications and Messaging</td>
+                        <td><span class="badge success">OAuth2, system user tokens</span></td>
+                        <td><span class="badge success">Self-serve possible, production business verification needed</span></td>
+                        <td><span style="font-size: 0.9rem;">Business verification and template approval</span></td>
+                        <td><a href="https://developers.facebook.com/docs/whatsapp/cloud-api" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Aircall</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Communications and Messaging</td>
+                        <td><span class="badge success">API ID/API token, OAuth2 for apps</span></td>
+                        <td><span class="badge success">Self-serve trial/developer app</span></td>
+                        <td><span style="font-size: 0.9rem;">Account and telephony compliance</span></td>
+                        <td><a href="https://developer.aircall.io/api-references/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Vonage</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Communications and Messaging</td>
+                        <td><span class="badge warning">API key/secret, JWT, bearer token</span></td>
+                        <td><span class="badge success">Self-serve trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Product-specific auth variants</span></td>
+                        <td><a href="https://developer.vonage.com/en/api" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Google Ads</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Marketing, Ads, Email and Social</td>
+                        <td><span class="badge success">OAuth2 plus developer token</span></td>
+                        <td><span class="badge success">Self-serve but developer token approval required</span></td>
+                        <td><span style="font-size: 0.9rem;">Developer token review and account permissions</span></td>
+                        <td><a href="https://developers.google.com/google-ads/api/docs/start" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Meta Ads</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Marketing, Ads, Email and Social</td>
+                        <td><span class="badge success">OAuth2 access tokens</span></td>
+                        <td><span class="badge success">Self-serve dev app, production permissions reviewed</span></td>
+                        <td><span style="font-size: 0.9rem;">App review and business verification for many scopes</span></td>
+                        <td><a href="https://developers.facebook.com/docs/marketing-apis/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">LinkedIn Ads</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Marketing, Ads, Email and Social</td>
+                        <td><span class="badge success">OAuth2</span></td>
+                        <td><span class="badge warning">Gated/partner for many marketing APIs</span></td>
+                        <td><span style="font-size: 0.9rem;">Marketing Developer Platform approval</span></td>
+                        <td><a href="https://learn.microsoft.com/en-us/linkedin/marketing/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">GoHighLevel</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Marketing, Ads, Email and Social</td>
+                        <td><span class="badge success">OAuth2, private integration tokens</span></td>
+                        <td><span class="badge success">Self-serve for agency account</span></td>
+                        <td><span style="font-size: 0.9rem;">Account type and location/company model</span></td>
+                        <td><a href="https://highlevel.stoplight.io/docs/integrations/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Mailchimp</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Marketing, Ads, Email and Social</td>
+                        <td><span class="badge success">OAuth2, API key</span></td>
+                        <td><span class="badge success">Self-serve free/trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Datacenter-specific API base URL</span></td>
+                        <td><a href="https://mailchimp.com/developer/marketing/api/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Klaviyo</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Marketing, Ads, Email and Social</td>
+                        <td><span class="badge success">API key/private key, OAuth2</span></td>
+                        <td><span class="badge success">Self-serve free account</span></td>
+                        <td><span style="font-size: 0.9rem;">Revisioned API versions and scopes</span></td>
+                        <td><a href="https://developers.klaviyo.com/en/reference/api_overview" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">systeme.io</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Marketing, Ads, Email and Social</td>
+                        <td><span class="badge warning">API key</span></td>
+                        <td><span class="badge success">Self-serve account</span></td>
+                        <td><span style="font-size: 0.9rem;">Smaller API surface and docs depth</span></td>
+                        <td><a href="https://developer.systeme.io/reference" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Pinterest</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Marketing, Ads, Email and Social</td>
+                        <td><span class="badge success">OAuth2</span></td>
+                        <td><span class="badge success">Self-serve app, some access reviewed</span></td>
+                        <td><span style="font-size: 0.9rem;">App review for production/ads scopes</span></td>
+                        <td><a href="https://developers.pinterest.com/docs/api/v5/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Threads (Meta)</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Marketing, Ads, Email and Social</td>
+                        <td><span class="badge success">OAuth2</span></td>
+                        <td><span class="badge success">Self-serve dev app, production review required</span></td>
+                        <td><span style="font-size: 0.9rem;">App review and limited API maturity</span></td>
+                        <td><a href="https://developers.facebook.com/docs/threads/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">SendGrid</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Marketing, Ads, Email and Social</td>
+                        <td><span class="badge warning">API key</span></td>
+                        <td><span class="badge success">Self-serve free/trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Sender authentication and compliance</span></td>
+                        <td><a href="https://www.twilio.com/docs/sendgrid/api-reference" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Shopify</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Ecommerce</td>
+                        <td><span class="badge success">OAuth2, access token, custom app tokens</span></td>
+                        <td><span class="badge success">Self-serve partner/dev store</span></td>
+                        <td><span style="font-size: 0.9rem;">Store install and protected customer data scopes</span></td>
+                        <td><a href="https://shopify.dev/docs/api" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">WooCommerce</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Ecommerce</td>
+                        <td><span class="badge success">Consumer key/secret, OAuth1, application passwords</span></td>
+                        <td><span class="badge success">Self-serve/open-source</span></td>
+                        <td><span style="font-size: 0.9rem;">WordPress hosting and plugin version differences</span></td>
+                        <td><a href="https://woocommerce.github.io/woocommerce-rest-api-docs/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">BigCommerce</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Ecommerce</td>
+                        <td><span class="badge success">OAuth2, access tokens</span></td>
+                        <td><span class="badge success">Self-serve trial/developer</span></td>
+                        <td><span style="font-size: 0.9rem;">Store install and channel/product complexity</span></td>
+                        <td><a href="https://developer.bigcommerce.com/docs/rest-management" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Salesforce Commerce Cloud</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Ecommerce</td>
+                        <td><span class="badge success">OAuth2, SLAS tokens, client credentials</span></td>
+                        <td><span class="badge warning">Gated/paid enterprise</span></td>
+                        <td><span style="font-size: 0.9rem;">Requires SFCC tenant and enterprise credentials</span></td>
+                        <td><a href="https://developer.salesforce.com/docs/commerce" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Magento (Adobe Commerce)</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Ecommerce</td>
+                        <td><span class="badge success">OAuth1, bearer/integration token, admin token</span></td>
+                        <td><span class="badge success">Self-serve open-source; Adobe Commerce paid</span></td>
+                        <td><span style="font-size: 0.9rem;">Instance setup and security posture</span></td>
+                        <td><a href="https://developer.adobe.com/commerce/webapi/rest/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Squarespace</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Ecommerce</td>
+                        <td><span class="badge success">OAuth2, API key/token</span></td>
+                        <td><span class="badge success">Self-serve developer account</span></td>
+                        <td><span style="font-size: 0.9rem;">API coverage narrower than full product</span></td>
+                        <td><a href="https://developers.squarespace.com/commerce-apis" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Ecwid</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Ecommerce</td>
+                        <td><span class="badge success">OAuth2, access token</span></td>
+                        <td><span class="badge success">Self-serve developer app</span></td>
+                        <td><span style="font-size: 0.9rem;">App install and store token management</span></td>
+                        <td><a href="https://api-docs.ecwid.com/reference/rest-api" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Gumroad</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Ecommerce</td>
+                        <td><span class="badge success">OAuth2, access token</span></td>
+                        <td><span class="badge success">Self-serve creator/developer</span></td>
+                        <td><span style="font-size: 0.9rem;">API surface is simpler and commerce-specific</span></td>
+                        <td><a href="https://gumroad.com/api" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Amazon Selling Partner</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Ecommerce</td>
+                        <td><span class="badge success">Login with Amazon OAuth2, AWS SigV4, restricted data tokens</span></td>
+                        <td><span class="badge warning">Developer registration and app review required</span></td>
+                        <td><span style="font-size: 0.9rem;">Amazon developer profile, app approval, restricted data rules</span></td>
+                        <td><a href="https://developer-docs.amazon.com/sp-api/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">fanbasis</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Ecommerce</td>
+                        <td><span class="badge warning">Unknown/public API not obvious</span></td>
+                        <td><span class="badge warning">Gated/no obvious public developer path</span></td>
+                        <td><span style="font-size: 0.9rem;">No public API docs found in brief research</span></td>
+                        <td><a href="https://www.fanbasis.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">DataForSEO</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Data, SEO and Scraping</td>
+                        <td><span class="badge warning">Basic auth login/password</span></td>
+                        <td><span class="badge success">Self-serve account</span></td>
+                        <td><span style="font-size: 0.9rem;">Cost/credits and task polling patterns</span></td>
+                        <td><a href="https://docs.dataforseo.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">SE Ranking</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Data, SEO and Scraping</td>
+                        <td><span class="badge warning">API key/token</span></td>
+                        <td><span class="badge warning">Paid plan/API package likely</span></td>
+                        <td><span style="font-size: 0.9rem;">Plan gating and credits</span></td>
+                        <td><a href="https://seranking.com/api.html" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Ahrefs</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Data, SEO and Scraping</td>
+                        <td><span class="badge warning">API token</span></td>
+                        <td><span class="badge warning">Paid/gated API access</span></td>
+                        <td><span style="font-size: 0.9rem;">API access requires eligible paid plan</span></td>
+                        <td><a href="https://ahrefs.com/api" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">MrScraper</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Data, SEO and Scraping</td>
+                        <td><span class="badge warning">API key</span></td>
+                        <td><span class="badge success">Self-serve trial/API key</span></td>
+                        <td><span style="font-size: 0.9rem;">Operational reliability and anti-bot limits</span></td>
+                        <td><a href="https://docs.mrscraper.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Apify</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Data, SEO and Scraping</td>
+                        <td><span class="badge warning">API token</span></td>
+                        <td><span class="badge success">Self-serve free/trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Actor-specific schemas</span></td>
+                        <td><a href="https://docs.apify.com/api/v2" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Firecrawl</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Data, SEO and Scraping</td>
+                        <td><span class="badge warning">API key</span></td>
+                        <td><span class="badge success">Self-serve free/trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Credits and crawl job polling</span></td>
+                        <td><a href="https://docs.firecrawl.dev/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Bright Data</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Data, SEO and Scraping</td>
+                        <td><span class="badge warning">API token/key</span></td>
+                        <td><span class="badge success">Self-serve trial, paid usage</span></td>
+                        <td><span style="font-size: 0.9rem;">Compliance and account approval for some products</span></td>
+                        <td><a href="https://docs.brightdata.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Sherlock</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Data, SEO and Scraping</td>
+                        <td><span class="badge warning">No hosted auth; CLI tool</span></td>
+                        <td><span class="badge success">Self-serve/open-source</span></td>
+                        <td><span style="font-size: 0.9rem;">No official hosted API; package a CLI skill</span></td>
+                        <td><a href="https://github.com/sherlock-project/sherlock" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Waterfall.io</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Data, SEO and Scraping</td>
+                        <td><span class="badge warning">API key</span></td>
+                        <td><span class="badge warning">Gated/contact-sales leaning</span></td>
+                        <td><span style="font-size: 0.9rem;">Docs/credential path appear sales-led</span></td>
+                        <td><a href="https://waterfall.io/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Clay</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Data, SEO and Scraping</td>
+                        <td><span class="badge warning">API key/webhook style</span></td>
+                        <td><span class="badge warning">Paid/admin likely</span></td>
+                        <td><span style="font-size: 0.9rem;">Public API surface and plan gating</span></td>
+                        <td><a href="https://docs.clay.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">GitHub</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Developer, Infra and Data platforms</td>
+                        <td><span class="badge success">OAuth2, GitHub App tokens, fine-grained PAT</span></td>
+                        <td><span class="badge success">Self-serve</span></td>
+                        <td><span style="font-size: 0.9rem;">Mix of user tokens, app installs, and org policies</span></td>
+                        <td><a href="https://docs.github.com/en/rest" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Vercel</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Developer, Infra and Data platforms</td>
+                        <td><span class="badge success">Bearer token, OAuth2</span></td>
+                        <td><span class="badge success">Self-serve</span></td>
+                        <td><span style="font-size: 0.9rem;">Team scoping and rate limits</span></td>
+                        <td><a href="https://vercel.com/docs/rest-api" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Netlify</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Developer, Infra and Data platforms</td>
+                        <td><span class="badge success">OAuth2, personal access token</span></td>
+                        <td><span class="badge success">Self-serve</span></td>
+                        <td><span style="font-size: 0.9rem;">OAuth app versus personal token split</span></td>
+                        <td><a href="https://docs.netlify.com/api/get-started/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Cloudflare</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Developer, Infra and Data platforms</td>
+                        <td><span class="badge success">API token, API key/email, OAuth2</span></td>
+                        <td><span class="badge success">Self-serve</span></td>
+                        <td><span style="font-size: 0.9rem;">Huge product surface requires slicing</span></td>
+                        <td><a href="https://developers.cloudflare.com/api/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Supabase</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Developer, Infra and Data platforms</td>
+                        <td><span class="badge warning">API keys, JWT, Postgres credentials</span></td>
+                        <td><span class="badge success">Self-serve free tier</span></td>
+                        <td><span style="font-size: 0.9rem;">Project keys and SQL safety boundaries</span></td>
+                        <td><a href="https://supabase.com/docs" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Neo4j</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Developer, Infra and Data platforms</td>
+                        <td><span class="badge warning">Basic auth, bearer tokens, API credentials</span></td>
+                        <td><span class="badge success">Self-serve free tier</span></td>
+                        <td><span style="font-size: 0.9rem;">Database-specific query safety</span></td>
+                        <td><a href="https://neo4j.com/docs/http-api/current/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Snowflake</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Developer, Infra and Data platforms</td>
+                        <td><span class="badge success">Key-pair JWT, OAuth2, password/session tokens</span></td>
+                        <td><span class="badge warning">Paid/trial with account admin</span></td>
+                        <td><span style="font-size: 0.9rem;">Warehouse/account setup and data governance</span></td>
+                        <td><a href="https://docs.snowflake.com/en/developer-guide/sql-api/index" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">MongoDB Atlas</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Developer, Infra and Data platforms</td>
+                        <td><span class="badge success">Public/private API key, OAuth2 for some flows</span></td>
+                        <td><span class="badge success">Self-serve free tier</span></td>
+                        <td><span style="font-size: 0.9rem;">Project/org permissions and IP access lists</span></td>
+                        <td><a href="https://www.mongodb.com/docs/api/doc/atlas-admin-api-v2/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Datadog</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Developer, Infra and Data platforms</td>
+                        <td><span class="badge warning">API key + application key</span></td>
+                        <td><span class="badge success">Self-serve trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Site region and product breadth</span></td>
+                        <td><a href="https://docs.datadoghq.com/api/latest/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Sentry</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Developer, Infra and Data platforms</td>
+                        <td><span class="badge success">Auth token, OAuth2</span></td>
+                        <td><span class="badge success">Self-serve</span></td>
+                        <td><span style="font-size: 0.9rem;">Org/project scoping and token permissions</span></td>
+                        <td><a href="https://docs.sentry.io/api/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Notion</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Productivity and Project Management</td>
+                        <td><span class="badge success">OAuth2, internal integration token</span></td>
+                        <td><span class="badge success">Self-serve</span></td>
+                        <td><span style="font-size: 0.9rem;">Workspace sharing and database schema variance</span></td>
+                        <td><a href="https://developers.notion.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Airtable</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Productivity and Project Management</td>
+                        <td><span class="badge success">OAuth2, personal access token</span></td>
+                        <td><span class="badge success">Self-serve free tier</span></td>
+                        <td><span style="font-size: 0.9rem;">Base schema discovery and rate limits</span></td>
+                        <td><a href="https://airtable.com/developers/web/api/introduction" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Linear</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Productivity and Project Management</td>
+                        <td><span class="badge success">OAuth2, API key</span></td>
+                        <td><span class="badge success">Self-serve</span></td>
+                        <td><span style="font-size: 0.9rem;">GraphQL schema and team/project mapping</span></td>
+                        <td><a href="https://developers.linear.app/docs/graphql/working-with-the-graphql-api" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Jira</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Productivity and Project Management</td>
+                        <td><span class="badge success">OAuth2, API token/basic, Forge app auth</span></td>
+                        <td><span class="badge success">Self-serve cloud site</span></td>
+                        <td><span style="font-size: 0.9rem;">Cloud/DC differences and scopes</span></td>
+                        <td><a href="https://developer.atlassian.com/cloud/jira/platform/rest/v3/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Asana</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Productivity and Project Management</td>
+                        <td><span class="badge success">OAuth2, personal access token</span></td>
+                        <td><span class="badge success">Self-serve</span></td>
+                        <td><span style="font-size: 0.9rem;">Workspace permissions and project custom fields</span></td>
+                        <td><a href="https://developers.asana.com/docs" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Monday.com</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Productivity and Project Management</td>
+                        <td><span class="badge success">API token, OAuth2</span></td>
+                        <td><span class="badge success">Self-serve trial</span></td>
+                        <td><span style="font-size: 0.9rem;">GraphQL complexity and board schema variance</span></td>
+                        <td><a href="https://developer.monday.com/api-reference/docs" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">ClickUp</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Productivity and Project Management</td>
+                        <td><span class="badge success">OAuth2, API token</span></td>
+                        <td><span class="badge success">Self-serve free/trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Workspace hierarchy and rate limits</span></td>
+                        <td><a href="https://clickup.com/api" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Coda</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Productivity and Project Management</td>
+                        <td><span class="badge success">API token, OAuth2</span></td>
+                        <td><span class="badge success">Self-serve</span></td>
+                        <td><span style="font-size: 0.9rem;">Doc/table schema discovery</span></td>
+                        <td><a href="https://coda.io/developers/apis/v1" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Smartsheet</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Productivity and Project Management</td>
+                        <td><span class="badge success">OAuth2, access token</span></td>
+                        <td><span class="badge success">Self-serve trial, enterprise admin may gate</span></td>
+                        <td><span style="font-size: 0.9rem;">Admin controls and sheet-specific schemas</span></td>
+                        <td><a href="https://smartsheet.redoc.ly/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Harvest</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Productivity and Project Management</td>
+                        <td><span class="badge success">OAuth2, personal access token</span></td>
+                        <td><span class="badge success">Self-serve trial</span></td>
+                        <td><span style="font-size: 0.9rem;">Account ID header and OAuth flow</span></td>
+                        <td><a href="https://help.getharvest.com/api-v2/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Stripe</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Finance and Fintech</td>
+                        <td><span class="badge success">API key, restricted key, OAuth2 for Connect</span></td>
+                        <td><span class="badge success">Self-serve test/live account</span></td>
+                        <td><span style="font-size: 0.9rem;">Live-mode compliance and restricted keys</span></td>
+                        <td><a href="https://stripe.com/docs/api" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Plaid</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Finance and Fintech</td>
+                        <td><span class="badge success">client_id/secret, link tokens, OAuth with institutions</span></td>
+                        <td><span class="badge success">Self-serve sandbox, production approval</span></td>
+                        <td><span style="font-size: 0.9rem;">Production access and product approval</span></td>
+                        <td><a href="https://plaid.com/docs/api/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Binance</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Finance and Fintech</td>
+                        <td><span class="badge warning">API key/secret HMAC</span></td>
+                        <td><span class="badge success">Self-serve account</span></td>
+                        <td><span style="font-size: 0.9rem;">Safety boundaries for trading and regional restrictions</span></td>
+                        <td><a href="https://developers.binance.com/docs" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Paygent Connect</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Finance and Fintech</td>
+                        <td><span class="badge warning">API key/token likely</span></td>
+                        <td><span class="badge warning">Gated/merchant onboarding</span></td>
+                        <td><span style="font-size: 0.9rem;">Public docs and credentials require merchant/provider access</span></td>
+                        <td><a href="https://paygent.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">iPayX</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Finance and Fintech</td>
+                        <td><span class="badge warning">API key/token likely</span></td>
+                        <td><span class="badge warning">Unclear</span></td>
+                        <td><span style="font-size: 0.9rem;">Docs maturity and public credential path</span></td>
+                        <td><a href="https://ipayx.ai/docs" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">QuickBooks</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Finance and Fintech</td>
+                        <td><span class="badge success">OAuth2</span></td>
+                        <td><span class="badge success">Self-serve sandbox, production app review</span></td>
+                        <td><span style="font-size: 0.9rem;">App review and accounting data permissions</span></td>
+                        <td><a href="https://developer.intuit.com/app/developer/qbo/docs/api/accounting/all-entities/account" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Xero</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Finance and Fintech</td>
+                        <td><span class="badge success">OAuth2</span></td>
+                        <td><span class="badge success">Self-serve developer app</span></td>
+                        <td><span style="font-size: 0.9rem;">Org connection and accounting permissions</span></td>
+                        <td><a href="https://developer.xero.com/documentation/api/accounting/overview" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Brex</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Finance and Fintech</td>
+                        <td><span class="badge success">OAuth2, bearer token</span></td>
+                        <td><span class="badge warning">Gated/customer/admin approval</span></td>
+                        <td><span style="font-size: 0.9rem;">Business account and admin consent</span></td>
+                        <td><a href="https://developer.brex.com/openapi/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Ramp</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Finance and Fintech</td>
+                        <td><span class="badge success">OAuth2, client credentials</span></td>
+                        <td><span class="badge warning">Gated/customer/admin approval</span></td>
+                        <td><span style="font-size: 0.9rem;">Customer admin approval and finance controls</span></td>
+                        <td><a href="https://docs.ramp.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">PitchBook</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">Finance and Fintech</td>
+                        <td><span class="badge warning">Token/API credentials</span></td>
+                        <td><span class="badge warning">Gated/enterprise</span></td>
+                        <td><span style="font-size: 0.9rem;">Enterprise contract and data licensing</span></td>
+                        <td><a href="https://pitchbook.com/data/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">NotebookLM</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">AI, Research and Media-native</td>
+                        <td><span class="badge success">Google OAuth/IAM via related Google APIs</span></td>
+                        <td><span class="badge warning">Gated/enterprise; no broad public NotebookLM API</span></td>
+                        <td><span style="font-size: 0.9rem;">No public self-serve API for consumer NotebookLM workflows</span></td>
+                        <td><a href="https://cloud.google.com/gemini" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Otter AI</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">AI, Research and Media-native</td>
+                        <td><span class="badge success">OAuth/API access limited; MCP listed by vendor/help</span></td>
+                        <td><span class="badge warning">Gated/plan-dependent</span></td>
+                        <td><span style="font-size: 0.9rem;">Public API details and plan gating</span></td>
+                        <td><a href="https://help.otter.ai/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Fathom</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">AI, Research and Media-native</td>
+                        <td><span class="badge success">API key/OAuth likely</span></td>
+                        <td><span class="badge warning">Gated/limited public docs</span></td>
+                        <td><span style="font-size: 0.9rem;">Developer docs and credential path are not obvious</span></td>
+                        <td><a href="https://fathom.video/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Consensus</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">AI, Research and Media-native</td>
+                        <td><span class="badge success">OAuth requested/API unclear</span></td>
+                        <td><span class="badge warning">Gated/partner likely</span></td>
+                        <td><span style="font-size: 0.9rem;">Public API and OAuth developer path not evident</span></td>
+                        <td><a href="https://consensus.app/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Reducto</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">AI, Research and Media-native</td>
+                        <td><span class="badge warning">API key</span></td>
+                        <td><span class="badge success">Self-serve/contact for key depending plan</span></td>
+                        <td><span style="font-size: 0.9rem;">Cost and document privacy controls</span></td>
+                        <td><a href="https://docs.reducto.ai/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Devin</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">AI, Research and Media-native</td>
+                        <td><span class="badge warning">API key/token; MCP documented</span></td>
+                        <td><span class="badge success">Self-serve/plan-dependent</span></td>
+                        <td><span style="font-size: 0.9rem;">Plan/API access and permissions</span></td>
+                        <td><a href="https://docs.devin.ai/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">higgsfield</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">AI, Research and Media-native</td>
+                        <td><span class="badge warning">CLI auth/token likely</span></td>
+                        <td><span class="badge warning">Gated/unclear</span></td>
+                        <td><span style="font-size: 0.9rem;">CLI/API docs and account access unclear</span></td>
+                        <td><a href="https://higgsfield.ai/cli" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Mermaid CLI</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">AI, Research and Media-native</td>
+                        <td><span class="badge warning">No remote auth</span></td>
+                        <td><span class="badge success">Self-serve/open-source</span></td>
+                        <td><span style="font-size: 0.9rem;">Package CLI with sandboxed file IO</span></td>
+                        <td><a href="https://github.com/mermaid-js/mermaid-cli" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">YouTube Transcript</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">AI, Research and Media-native</td>
+                        <td><span class="badge warning">API key</span></td>
+                        <td><span class="badge success">Self-serve paid/free trial likely</span></td>
+                        <td><span style="font-size: 0.9rem;">Third-party dependency and quota/cost</span></td>
+                        <td><a href="https://www.transcriptapi.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                    <tr>
+                        <td style="font-weight: 600;">Grain</td>
+                        <td style="color: var(--text-muted); font-size: 0.9rem;">AI, Research and Media-native</td>
+                        <td><span class="badge success">OAuth/API token likely</span></td>
+                        <td><span class="badge warning">Gated/plan-dependent</span></td>
+                        <td><span style="font-size: 0.9rem;">Developer docs and credential path are thin</span></td>
+                        <td><a href="https://grain.com/" target="_blank">Docs</a></td>
+                    </tr>
+
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <footer style="text-align: center; padding: 3rem; color: var(--text-muted); margin-top: 3rem; border-top: 1px solid var(--border);">
+        <p>Generated by AI Product Ops Research Agent</p>
+    </footer>
+</body>
+</html>

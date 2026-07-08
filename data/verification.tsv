@@ -1,0 +1,17 @@
+app	sample_reason	first_pass	final_check	result	lesson	evidence
+Salesforce	Large enterprise CRM	Correct auth and API breadth; underweighted admin friction	Docs confirm broad API families and OAuth options	Pass	Add enterprise/admin blocker even when docs are public	https://developer.salesforce.com/docs/apis
+Slack	Canonical OAuth messaging app	Correct	Docs confirm Web API, OAuth, Events API, and token scopes	Pass	Scopes and workspace install are the real implementation risk	https://api.slack.com/apis
+Google Ads	Review-gated ads API	Initially marked self-serve too optimistically	Docs confirm OAuth plus developer token approval workflow	Fixed	Ads platforms are self-serve only until production/review gates	https://developers.google.com/google-ads/api/docs/start
+LinkedIn Ads	Known partner-gated marketing surface	Correct gated verdict	Docs confirm Marketing APIs live under Microsoft/LinkedIn access programs	Pass	Ads/social categories need access-program checks, not just API docs	https://learn.microsoft.com/en-us/linkedin/marketing/
+Shopify	High-value ecommerce easy win	Correct	Docs confirm Admin APIs, OAuth/custom app tokens, webhooks	Pass	Great toolkit candidate if scopes are sliced by workflow	https://shopify.dev/docs/api
+Amazon Selling Partner	Complex ecommerce auth	First pass missed AWS SigV4/restricted-data layer	Docs confirm LWA, AWS signing, and role/access requirements	Fixed	Some APIs have multi-layer auth beyond OAuth/API key labels	https://developer-docs.amazon.com/sp-api/
+Firecrawl	AI-native scraping API	Correct	Docs confirm API-key REST and MCP ecosystem	Pass	AI-native APIs often become fastest MCP wins	https://docs.firecrawl.dev/
+GitHub	Developer-platform benchmark	Correct	Docs confirm REST plus token/app models; MCP exists	Pass	Developer platforms have best public docs and mature auth	https://docs.github.com/en/rest
+Cloudflare	Huge infra surface	Correct but too broad initially	Docs confirm many product APIs; MCP exists	Pass	Build by product slice, not as one giant toolkit	https://developers.cloudflare.com/api/
+Notion	Productivity benchmark	Correct	Docs confirm OAuth/internal tokens and REST API	Pass	Schema discovery is the main toolkit design issue	https://developers.notion.com/
+Stripe	Fintech easy win	Correct	Docs confirm API keys, Connect OAuth, webhooks, MCP ecosystem	Pass	Finance can be self-serve, but live-mode actions need guardrails	https://stripe.com/docs/api
+Plaid	Fintech approval gate	Correct	Docs confirm sandbox self-serve but production approval	Pass	Separate sandbox buildability from production rollout	https://plaid.com/docs/api/
+PitchBook	Enterprise data vendor	Correct gated verdict	Public site points to data/API products but sales/data licensing gate remains	Pass	Data vendors often require outreach even with API products	https://pitchbook.com/data/
+NotebookLM	Consumer AI product with no clean public API	Correct not-today verdict	Google Gemini/Cloud docs exist, but NotebookLM consumer workflow API is not public	Pass	Do not substitute adjacent platform APIs for the requested product	https://cloud.google.com/gemini
+Devin	AI-native API/MCP app	Correct	Docs confirm developer automation surface and MCP path	Pass	AI-native tools are often already agent-shaped	https://docs.devin.ai/
+fanbasis	Long-tail creator platform	Correct no-public-docs finding	Public site did not expose obvious developer API docs	Pass	Long-tail apps need outreach or customer-provided credentials	https://www.fanbasis.com/
