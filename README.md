@@ -7,6 +7,8 @@ Research whether 100 customer-requested apps can become Composio-style agent too
 ## Setup
 
 ```bash
+git clone https://github.com/Imkumar80/Composio-research-agent.git
+cd Composio-research-agent
 pip install -r requirements.txt
 ```
 
