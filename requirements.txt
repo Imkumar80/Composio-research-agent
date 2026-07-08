@@ -1,2 +1,4 @@
 composio-core
 openai
+python-dotenv
+google-genai
