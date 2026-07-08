@@ -12,9 +12,20 @@ This repo is a take-home assignment artifact for mapping whether 100 requested a
 
 ## Deploy the case study
 
-Pushes to `main` auto-deploy via GitHub Actions (`.github/workflows/pages.yml`).
+### One-time setup (required — fixes the 404)
 
-Manual deploy:
+1. Open **[Settings → Pages](https://github.com/Imkumar80/Composio-research-agent/settings/pages)**
+2. Under **Build and deployment → Source**, choose **Deploy from a branch**
+3. Branch: **`gh-pages`** · Folder: **`/ (root)`** · Save
+
+After the workflow runs, the site will be at:
+**https://imkumar80.github.io/Composio-research-agent/**
+
+### Auto-deploy
+
+Every push to `main` runs `.github/workflows/pages.yml`, which builds `index.html` and pushes it to the `gh-pages` branch.
+
+Manual rebuild:
 
 ```bash
 python generate_case_study.py
@@ -22,8 +33,6 @@ git add index.html
 git commit -m "Update case study"
 git push
 ```
-
-Then enable **GitHub Pages → Source: GitHub Actions** in repo settings (one-time).
 
 ## Run
 
