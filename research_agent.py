@@ -53,20 +53,39 @@ async def main():
     
     if GEMINI_API_KEY:
         print("[*] Initializing Google ADK Agent with Composio...")
+        # pyrefly: ignore [missing-import]
         from google.adk.agents import Agent
+        # pyrefly: ignore [missing-import]
         from google.adk.runners import Runner
-        from composio_google_adk import ComposioToolSet as GoogleComposioToolSet, App
+        from composio import Composio
+        from composio_google_adk import GoogleAdkProvider
         
-        toolset = GoogleComposioToolSet(api_key=COMPOSIO_API_KEY)
-        tools = toolset.get_tools(apps=[App.FIRECRAWL])
+        # Initialize Composio v0.17+ using the ADK Provider
+        composio_client = Composio(provider=GoogleAdkProvider())
+        session = composio_client.create(user_id="local_script")
+        tools = session.tools()
+
+        from google.adk.sessions import InMemorySessionService
 
         # ADK natively runs the tool loop!
         agent = Agent(
+            name="research_agent",
             model="gemini-2.5-flash",
             tools=tools,
-            system_instruction=SYSTEM_PROMPT
+            instruction=SYSTEM_PROMPT
         )
-        runner = Runner(agent)
+        
+        session_service = InMemorySessionService()
+        adk_session = session_service.create_session_sync(
+            app_name="research_agent",
+            user_id="local_script",
+            session_id="session_1"
+        )
+        runner = Runner(
+            agent=agent,
+            app_name="research_agent",
+            session_service=session_service,
+        )
 
         for app in apps_to_research:
             print(f"[*] Querying ADK Runner for: {app}")

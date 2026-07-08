@@ -1,4 +1,6 @@
-composio-core
-openai
+composio
+composio_openai
+composio_google_adk
+google-adk
 python-dotenv
-google-genai
+openai
