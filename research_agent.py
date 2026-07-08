@@ -2,11 +2,17 @@ import os
 import json
 import asyncio
 import time
+from dotenv import load_dotenv
 from composio import ComposioToolSet, App
 from openai import AsyncOpenAI
+from google import genai
+
+# Load environment variables from .env file
+load_dotenv()
 
 # Set up APIs
 OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
 COMPOSIO_API_KEY = os.getenv("COMPOSIO_API_KEY")
 
 async def run_simulation():
@@ -92,43 +98,54 @@ async def run_simulation():
     print("==================================================")
 
 async def run_real():
-    """Runs a real, live query using OpenAI and Composio."""
-    client = AsyncOpenAI(api_key=OPENAI_API_KEY)
-    toolset = ComposioToolSet(api_key=COMPOSIO_API_KEY)
-    tools = toolset.get_tools(apps=[App.FIRECRAWL])
-
-    # We run on a small sample of 3 apps
+    """Runs a real, live query using OpenAI or Gemini and Composio."""
     APPS_TO_RESEARCH = ["HubSpot", "Twilio", "Stripe"]
     
     SYSTEM_PROMPT = """
     You are an AI Product Ops Research Agent. Your job is to research developer API documentation.
-    Extract the following details in JSON:
-    - category
-    - one_line
-    - auth
-    - self_serve
-    - api_surface
-    - verdict
-    - blocker
-    - evidence
+    Extract the following details in JSON: category, one_line, auth, self_serve, api_surface, verdict, blocker, evidence.
     """
 
-    for app in APPS_TO_RESEARCH:
-        print(f"[*] Querying API for: {app}")
-        response = await client.chat.completions.create(
-            model="gpt-4o",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": f"Research the developer API for: {app}"}
-            ],
-            tools=tools,
-            tool_choice="auto",
-            response_format={ "type": "json_object" }
-        )
-        print(f"[OK] Result for {app}: {response.choices[0].message.content}")
+    if GEMINI_API_KEY:
+        print("[*] Initializing Google Gemini with Composio...")
+        from google import genai
+        from composio_google import ComposioToolSet as GoogleComposioToolSet, App
+        
+        client = genai.Client(api_key=GEMINI_API_KEY)
+        toolset = GoogleComposioToolSet(api_key=COMPOSIO_API_KEY)
+        tools = toolset.get_tools(apps=[App.FIRECRAWL])
+
+        for app in APPS_TO_RESEARCH:
+            print(f"[*] Querying Gemini for: {app}")
+            response = client.models.generate_content(
+                model='gemini-2.5-flash',
+                contents=f"{SYSTEM_PROMPT}\n\nResearch the developer API for: {app}",
+                config=genai.types.GenerateContentConfig(tools=tools)
+            )
+            print(f"[OK] Result for {app}: {response.text}")
+            
+    elif OPENAI_API_KEY:
+        print("[*] Initializing OpenAI with Composio...")
+        client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+        toolset = ComposioToolSet(api_key=COMPOSIO_API_KEY)
+        tools = toolset.get_tools(apps=[App.FIRECRAWL])
+
+        for app in APPS_TO_RESEARCH:
+            print(f"[*] Querying OpenAI for: {app}")
+            response = await client.chat.completions.create(
+                model="gpt-4o",
+                messages=[
+                    {"role": "system", "content": SYSTEM_PROMPT},
+                    {"role": "user", "content": f"Research the developer API for: {app}"}
+                ],
+                tools=tools,
+                tool_choice="auto",
+                response_format={ "type": "json_object" }
+            )
+            print(f"[OK] Result for {app}: {response.choices[0].message.content}")
 
 async def main():
-    if not OPENAI_API_KEY or not COMPOSIO_API_KEY:
+    if not COMPOSIO_API_KEY or (not OPENAI_API_KEY and not GEMINI_API_KEY):
         await run_simulation()
     else:
         await run_real()
