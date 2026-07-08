@@ -3,7 +3,6 @@ import json
 import asyncio
 import csv
 from dotenv import load_dotenv
-from composio import ComposioToolSet, App
 from openai import AsyncOpenAI
 
 # Load environment variables from .env file
@@ -54,7 +53,8 @@ async def main():
     
     if GEMINI_API_KEY:
         print("[*] Initializing Google ADK Agent with Composio...")
-        from google_adk import Agent, Runner
+        from google.adk.agents import Agent
+        from google.adk.runners import Runner
         from composio_google_adk import ComposioToolSet as GoogleComposioToolSet, App
         
         toolset = GoogleComposioToolSet(api_key=COMPOSIO_API_KEY)
@@ -80,6 +80,8 @@ async def main():
                 
     elif OPENAI_API_KEY:
         print("[*] Initializing OpenAI with Composio...")
+        from composio_openai import ComposioToolSet, App
+        
         client = AsyncOpenAI(api_key=OPENAI_API_KEY)
         toolset = ComposioToolSet(api_key=COMPOSIO_API_KEY)
         tools = toolset.get_tools(apps=[App.FIRECRAWL])
