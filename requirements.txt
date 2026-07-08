@@ -1,6 +1,5 @@
 composio
-composio_openai
-composio_google_adk
-google-adk
+composio-openai
+composio-google
 python-dotenv
 openai

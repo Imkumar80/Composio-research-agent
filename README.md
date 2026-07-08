@@ -12,10 +12,35 @@ This repo is a take-home assignment artifact for mapping whether 100 requested a
 ## Run
 
 ```bash
-python research_agent.py
+pip install -r requirements.txt
 ```
 
-Then open `index.html` in a browser.
+Set these in `.env`:
+
+```txt
+COMPOSIO_API_KEY=your_composio_key
+GEMINI_API_KEY=your_gemini_key   # preferred
+# OPENAI_API_KEY=your_openai_key # optional fallback
+```
+
+Research apps (reads from `data/apps.tsv`):
+
+```bash
+# Research one app (quick test)
+python research_agent.py --app Stripe
+
+# Research first 5 apps
+python research_agent.py --limit 5
+
+# Research all 100, merge into apps.json, regenerate HTML
+python research_agent.py --refresh-data
+
+# Force re-research and use OpenAI instead of Gemini
+python research_agent.py --app HubSpot --force --provider openai
+```
+
+Results are saved incrementally to `data/agent_research_results.json`.
+Regenerate the case study page with `python generate_case_study.py` (also runs automatically at the end of each research run).
 
 ## Research Agent Workflow
 

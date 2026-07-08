@@ -1,135 +1,416 @@
-import os
-import json
-import asyncio
-import csv
-from dotenv import load_dotenv
-from openai import AsyncOpenAI
+"""
+AI Product Ops Research Agent
 
-# Load environment variables from .env file
-load_dotenv()
-
-OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
-GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
-COMPOSIO_API_KEY = os.getenv("COMPOSIO_API_KEY")
-
-SYSTEM_PROMPT = """
-You are an AI Product Ops Research Agent. Your job is to research developer API documentation.
-Extract the following details in JSON format:
-- category: The category of the app.
-- one_line: What the app does in one line.
-- auth: The authentication methods (OAuth2, API key, Basic, token, or other).
-- self_serve: Whether a developer can get credentials themselves for free or on a trial (Self-serve vs Gated).
-- api_surface: The API surface (e.g. broad REST, GraphQL, bulk APIs).
-- verdict: Buildable or not (is it an agent toolkit today?).
-- blocker: The main blocker if it is not easily buildable.
-- evidence: URL to the documentation proving this.
+Researches developer API documentation for apps using Composio web-search tools
+and an LLM agentic loop (Gemini or OpenAI). Saves structured JSON results and
+can refresh the case-study data files.
 """
 
-def load_apps_to_research(filepath="data/apps.tsv"):
-    """Loads the list of apps to research from the TSV file."""
-    apps = []
+from __future__ import annotations
+
+import argparse
+import csv
+import json
+import os
+import re
+import subprocess
+import sys
+import time
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any
+
+from dotenv import load_dotenv
+
+load_dotenv()
+
+DATA_DIR = Path("data")
+RESULTS_FILE = DATA_DIR / "agent_research_results.json"
+APPS_TSV = DATA_DIR / "apps.tsv"
+APPS_JSON = DATA_DIR / "apps.json"
+
+COMPOSIO_API_KEY = os.getenv("COMPOSIO_API_KEY")
+OPENAI_API_KEY = os.getenv("OPENAI_API_KEY")
+GEMINI_API_KEY = os.getenv("GEMINI_API_KEY")
+
+USER_ID = "research_agent"
+MAX_TOOL_ROUNDS = 12
+
+RESEARCH_TOOLS = [
+    "TAVILY_SEARCH",
+    "TAVILY_EXTRACT",
+    "COMPOSIO_SEARCH_DUCK_DUCK_GO",
+    "COMPOSIO_SEARCH_FETCH_URL_CONTENT",
+]
+
+OUTPUT_FIELDS = [
+    "category",
+    "one_line",
+    "auth",
+    "self_serve",
+    "api_surface",
+    "mcp",
+    "verdict",
+    "blocker",
+    "evidence",
+]
+
+SYSTEM_PROMPT = """You are an AI Product Ops Research Agent. Your job is to research
+developer API documentation for a given app and return structured findings.
+
+WORKFLOW (follow in order):
+1. Use TAVILY_SEARCH or COMPOSIO_SEARCH_DUCK_DUCK_GO to find the official developer
+   documentation (look for developer.*, docs.*, api.* domains — not marketing pages).
+2. Use TAVILY_EXTRACT or COMPOSIO_SEARCH_FETCH_URL_CONTENT on the official docs pages
+   to read authentication and API reference sections.
+3. Base every field on evidence from those docs. Do not guess.
+
+RULES:
+- "auth" means API authentication (OAuth2, API key, bearer token, basic auth, etc.),
+  NOT end-user login methods like "email/password" or "SSO".
+- "self_serve": can a developer sign up and get API credentials without sales/partner
+  approval? Use values like "Self-serve trial" or "Gated/paid enterprise".
+- "mcp": note if there is an official or community MCP server for this app;
+  otherwise use "No clear MCP" or "Community MCPs".
+- "verdict": one of "Buildable", "Buildable with customer", "Maybe", "Not today".
+- "evidence": a single primary HTTPS URL to the official developer docs (pick the best one).
+
+Return ONLY a single valid JSON object with these keys:
+category, one_line, auth, self_serve, api_surface, mcp, verdict, blocker, evidence
+No markdown fences, no commentary outside the JSON."""
+
+
+def build_user_prompt(app_name: str, category_hint: str = "") -> str:
+    hint = f" (likely category: {category_hint})" if category_hint else ""
+    return (
+        f"Research the developer API for: {app_name}{hint}.\n"
+        "Search the web, read the official developer docs, then return the JSON object."
+    )
+
+
+def parse_json_response(text: str) -> dict[str, Any]:
+    """Extract and parse JSON from model output, tolerating markdown fences."""
+    if not text:
+        raise ValueError("Empty model response")
+
+    cleaned = text.strip()
+    fence_match = re.search(r"```(?:json)?\s*([\s\S]*?)\s*```", cleaned)
+    if fence_match:
+        cleaned = fence_match.group(1).strip()
+
     try:
-        with open(filepath, 'r', encoding='utf-8') as f:
-            reader = csv.DictReader(f, delimiter='\t')
-            for row in reader:
-                apps.append(row['app'])
-    except FileNotFoundError:
-        print(f"[!] Input file {filepath} not found. Please provide the list of apps.")
+        return json.loads(cleaned)
+    except json.JSONDecodeError:
+        start = cleaned.find("{")
+        end = cleaned.rfind("}")
+        if start != -1 and end != -1 and end > start:
+            return json.loads(cleaned[start : end + 1])
+        raise
+
+
+def normalize_result(raw: dict[str, Any], app_name: str) -> dict[str, str]:
+    """Ensure all expected fields exist with string values."""
+    result = {"app": app_name}
+    for key in OUTPUT_FIELDS:
+        value = raw.get(key, "")
+        result[key] = str(value).strip() if value is not None else ""
+
+    # Keep one canonical evidence URL when the model returns several.
+    evidence = result.get("evidence", "")
+    if evidence:
+        urls = re.findall(r"https?://[^\s\"'<>]+", evidence)
+        if urls:
+            result["evidence"] = urls[0].rstrip(".,;)")
+    return result
+
+
+def load_apps(filepath: Path = APPS_TSV) -> list[dict[str, str]]:
+    apps: list[dict[str, str]] = []
+    if not filepath.exists():
+        return apps
+    with open(filepath, encoding="utf-8") as f:
+        reader = csv.DictReader(f, delimiter="\t")
+        for row in reader:
+            apps.append(dict(row))
     return apps
 
-async def main():
-    if not COMPOSIO_API_KEY or (not OPENAI_API_KEY and not GEMINI_API_KEY):
-        print("[!] ERROR: Missing API keys in .env file.")
-        print("Please provide COMPOSIO_API_KEY and either OPENAI_API_KEY or GEMINI_API_KEY to run the agent.")
+
+def load_existing_results() -> dict[str, dict[str, Any]]:
+    if not RESULTS_FILE.exists():
+        return {}
+    with open(RESULTS_FILE, encoding="utf-8") as f:
+        data = json.load(f)
+    if isinstance(data, list):
+        return {item["app"]: item for item in data if "app" in item}
+    return data
+
+
+def save_results(results: dict[str, dict[str, Any]]) -> None:
+    DATA_DIR.mkdir(parents=True, exist_ok=True)
+    ordered = sorted(results.values(), key=lambda r: r.get("app", ""))
+    with open(RESULTS_FILE, "w", encoding="utf-8") as f:
+        json.dump(ordered, f, indent=2, ensure_ascii=False)
+
+
+def merge_into_apps_json(results: dict[str, dict[str, Any]]) -> None:
+    """Update apps.json rows with agent research output."""
+    if not APPS_JSON.exists():
         return
+    with open(APPS_JSON, encoding="utf-8") as f:
+        apps = json.load(f)
 
-    apps_to_research = load_apps_to_research()
-    if not apps_to_research:
-        # Fallback to a small test set if TSV doesn't exist
-        apps_to_research = ["Salesforce", "HubSpot", "Stripe"]
+    by_name = {r["app"]: r for r in results.values() if r.get("status") == "ok"}
+    for app in apps:
+        name = app.get("app", "")
+        if name not in by_name:
+            continue
+        research = by_name[name]
+        for key in OUTPUT_FIELDS:
+            if research.get(key):
+                app[key] = research[key]
 
-    print(f"[*] Starting production research run for {len(apps_to_research)} apps...")
-    results = []
-    
-    if GEMINI_API_KEY:
-        print("[*] Initializing Google ADK Agent with Composio...")
-        # pyrefly: ignore [missing-import]
-        from google.adk.agents import Agent
-        # pyrefly: ignore [missing-import]
-        from google.adk.runners import Runner
+    with open(APPS_JSON, "w", encoding="utf-8") as f:
+        json.dump(apps, f, indent=2, ensure_ascii=False)
+
+
+def write_apps_tsv(apps: list[dict[str, str]]) -> None:
+    columns = ["id", "category", "app", *OUTPUT_FIELDS]
+    with open(APPS_TSV, "w", encoding="utf-8", newline="") as f:
+        writer = csv.DictWriter(f, fieldnames=columns, delimiter="\t", extrasaction="ignore")
+        writer.writeheader()
+        for row in apps:
+            writer.writerow(row)
+
+
+def regenerate_html() -> None:
+    script = Path("generate_case_study.py")
+    if script.exists():
+        subprocess.run([sys.executable, str(script)], check=False)
+
+
+@dataclass
+class ResearchRunConfig:
+    provider: str = "gemini"
+    limit: int | None = None
+    start: int = 0
+    app_filter: str | None = None
+    skip_existing: bool = True
+    refresh_data: bool = False
+    model: str | None = None
+
+
+class GeminiResearchAgent:
+    def __init__(self, model: str = "gemini-2.5-flash") -> None:
+        os.environ["GOOGLE_API_KEY"] = GEMINI_API_KEY or ""
         from composio import Composio
-        from composio_google_adk import GoogleAdkProvider
-        
-        # Initialize Composio v0.17+ using the ADK Provider
-        composio_client = Composio(provider=GoogleAdkProvider())
-        session = composio_client.create(user_id="local_script")
-        tools = session.tools()
+        from composio_google import GoogleProvider
+        from google import genai
+        from google.genai import types
 
-        from google.adk.sessions import InMemorySessionService
-
-        # ADK natively runs the tool loop!
-        agent = Agent(
-            name="research_agent",
-            model="gemini-2.5-flash",
-            tools=tools,
-            instruction=SYSTEM_PROMPT
-        )
-        
-        session_service = InMemorySessionService()
-        adk_session = session_service.create_session_sync(
-            app_name="research_agent",
-            user_id="local_script",
-            session_id="session_1"
-        )
-        runner = Runner(
-            agent=agent,
-            app_name="research_agent",
-            session_service=session_service,
+        self._types = types
+        self.composio = Composio(api_key=COMPOSIO_API_KEY, provider=GoogleProvider())
+        self.client = genai.Client()
+        self.model = model
+        self.tools = self.composio.tools.get(user_id=USER_ID, tools=RESEARCH_TOOLS)
+        self.config = types.GenerateContentConfig(
+            tools=self.tools,
+            system_instruction=SYSTEM_PROMPT,
         )
 
-        for app in apps_to_research:
-            print(f"[*] Querying ADK Runner for: {app}")
-            try:
-                response = runner.run(f"Research the developer API for: {app}")
-                output_text = response.text if hasattr(response, 'text') else str(response)
-                print(f"[OK] Result for {app}: {output_text}")
-                results.append({"app": app, "raw_result": output_text})
-            except Exception as e:
-                print(f"[!] Error researching {app}: {e}")
-                
-    elif OPENAI_API_KEY:
-        print("[*] Initializing OpenAI with Composio...")
-        from composio_openai import ComposioToolSet, App
-        
-        client = AsyncOpenAI(api_key=OPENAI_API_KEY)
-        toolset = ComposioToolSet(api_key=COMPOSIO_API_KEY)
-        tools = toolset.get_tools(apps=[App.FIRECRAWL])
+    def research(self, app_name: str, category_hint: str = "") -> str:
+        chat = self.client.chats.create(model=self.model, config=self.config)
+        response = chat.send_message(build_user_prompt(app_name, category_hint))
 
-        for app in apps_to_research:
-            print(f"[*] Querying OpenAI for: {app}")
-            try:
-                response = await client.chat.completions.create(
-                    model="gpt-4o",
-                    messages=[
-                        {"role": "system", "content": SYSTEM_PROMPT},
-                        {"role": "user", "content": f"Research the developer API for: {app}"}
-                    ],
-                    tools=tools,
-                    tool_choice="auto",
-                    response_format={ "type": "json_object" }
+        for _ in range(MAX_TOOL_ROUNDS):
+            if not response.function_calls:
+                break
+            parts = []
+            for fc in response.function_calls:
+                result = self.composio.provider.execute_tool_call(
+                    user_id=USER_ID, function_call=fc
                 )
-                output_text = response.choices[0].message.content
-                print(f"[OK] Result for {app}: {output_text}")
-                results.append({"app": app, "raw_result": output_text})
-            except Exception as e:
-                print(f"[!] Error researching {app}: {e}")
+                parts.append(
+                    self._types.Part.from_function_response(name=fc.name, response=result)
+                )
+            response = chat.send_message(parts)
 
-    # Save output incrementally or at the end
-    os.makedirs("data", exist_ok=True)
-    with open("data/agent_research_results.json", "w", encoding="utf-8") as f:
-        json.dump(results, f, indent=4)
-        
-    print("[*] Run complete. Results saved to data/agent_research_results.json")
+        if not response.text:
+            raise RuntimeError("Model returned no text after tool loop")
+        return response.text
+
+
+class OpenAIResearchAgent:
+    def __init__(self, model: str = "gpt-4o-mini") -> None:
+        from openai import OpenAI
+        from composio import Composio
+        from composio_openai import OpenAIProvider
+
+        self.composio = Composio(api_key=COMPOSIO_API_KEY, provider=OpenAIProvider())
+        self.client = OpenAI(api_key=OPENAI_API_KEY)
+        self.model = model
+        self.tools = self.composio.tools.get(user_id=USER_ID, tools=RESEARCH_TOOLS)
+
+    def research(self, app_name: str, category_hint: str = "") -> str:
+        messages: list[dict[str, Any]] = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": build_user_prompt(app_name, category_hint)},
+        ]
+
+        for _ in range(MAX_TOOL_ROUNDS):
+            response = self.client.chat.completions.create(
+                model=self.model,
+                tools=self.tools,
+                messages=messages,
+            )
+            msg = response.choices[0].message
+            if not msg.tool_calls:
+                if not msg.content:
+                    raise RuntimeError("Model returned no content after tool loop")
+                return msg.content
+
+            results = self.composio.provider.handle_tool_calls(
+                response=response, user_id=USER_ID
+            )
+            messages.append(msg.model_dump())
+            for i, tc in enumerate(msg.tool_calls):
+                messages.append(
+                    {
+                        "role": "tool",
+                        "tool_call_id": tc.id,
+                        "content": json.dumps(results[i]),
+                    }
+                )
+
+        raise RuntimeError(f"Exceeded {MAX_TOOL_ROUNDS} tool rounds without final answer")
+
+
+def pick_provider(config: ResearchRunConfig):
+    if config.provider == "openai":
+        if not OPENAI_API_KEY:
+            raise SystemExit("[!] OPENAI_API_KEY is missing in .env")
+        model = config.model or "gpt-4o-mini"
+        print(f"[*] Using OpenAI ({model}) + Composio search tools")
+        return OpenAIResearchAgent(model=model)
+
+    if not GEMINI_API_KEY:
+        raise SystemExit("[!] GEMINI_API_KEY is missing in .env")
+    model = config.model or "gemini-2.5-flash"
+    print(f"[*] Using Gemini ({model}) + Composio search tools")
+    return GeminiResearchAgent(model=model)
+
+
+def select_apps(apps: list[dict[str, str]], config: ResearchRunConfig) -> list[dict[str, str]]:
+    if config.app_filter:
+        apps = [a for a in apps if a.get("app", "").lower() == config.app_filter.lower()]
+    apps = apps[config.start :]
+    if config.limit is not None:
+        apps = apps[: config.limit]
+    return apps
+
+
+def run_research(config: ResearchRunConfig) -> dict[str, dict[str, Any]]:
+    if not COMPOSIO_API_KEY:
+        raise SystemExit("[!] COMPOSIO_API_KEY is missing in .env")
+
+    apps = load_apps()
+    if not apps:
+        apps = [{"id": "", "category": "", "app": name} for name in ["Stripe", "HubSpot", "Salesforce"]]
+
+    apps = select_apps(apps, config)
+    if not apps:
+        print("[!] No apps matched your filters.")
+        return {}
+
+    existing = load_existing_results()
+    agent = pick_provider(config)
+
+    print(f"[*] Researching {len(apps)} app(s)...")
+    results = dict(existing)
+
+    for i, row in enumerate(apps, start=1):
+        app_name = row.get("app", "").strip()
+        if not app_name:
+            continue
+
+        if config.skip_existing and app_name in results and results[app_name].get("status") == "ok":
+            print(f"[=] ({i}/{len(apps)}) Skipping {app_name} (already researched)")
+            continue
+
+        category_hint = row.get("category", "")
+        print(f"[*] ({i}/{len(apps)}) Researching: {app_name}")
+        started = time.time()
+
+        try:
+            raw_text = agent.research(app_name, category_hint)
+            parsed = parse_json_response(raw_text)
+            normalized = normalize_result(parsed, app_name)
+            entry = {
+                **normalized,
+                "status": "ok",
+                "raw_result": raw_text,
+                "researched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+                "duration_s": round(time.time() - started, 1),
+            }
+            print(f"[OK] {app_name}: {normalized.get('verdict', '?')} — {normalized.get('evidence', '')[:80]}")
+        except Exception as exc:
+            entry = {
+                "app": app_name,
+                "status": "error",
+                "error": str(exc),
+                "researched_at": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
+            }
+            print(f"[!] Error researching {app_name}: {exc}")
+
+        results[app_name] = entry
+        save_results(results)
+
+    if config.refresh_data:
+        merge_into_apps_json(results)
+        print(f"[*] Updated {APPS_JSON}")
+
+    regenerate_html()
+    print(f"[*] Done. Results in {RESULTS_FILE}")
+    return results
+
+
+def parse_args() -> ResearchRunConfig:
+    parser = argparse.ArgumentParser(description="Research developer APIs using Composio + LLM")
+    parser.add_argument(
+        "--provider",
+        choices=["gemini", "openai"],
+        default="gemini" if GEMINI_API_KEY else "openai",
+        help="LLM provider (default: gemini if GEMINI_API_KEY is set)",
+    )
+    parser.add_argument("--model", help="Override default model name")
+    parser.add_argument("--limit", type=int, help="Max number of apps to research")
+    parser.add_argument("--start", type=int, default=0, help="Start index in apps.tsv")
+    parser.add_argument("--app", dest="app_filter", help="Research a single app by name")
+    parser.add_argument(
+        "--force",
+        action="store_true",
+        help="Re-research apps even if a successful result already exists",
+    )
+    parser.add_argument(
+        "--refresh-data",
+        action="store_true",
+        help="Merge successful results into data/apps.json and regenerate index.html",
+    )
+    args = parser.parse_args()
+    return ResearchRunConfig(
+        provider=args.provider,
+        model=args.model,
+        limit=args.limit,
+        start=args.start,
+        app_filter=args.app_filter,
+        skip_existing=not args.force,
+        refresh_data=args.refresh_data,
+    )
+
+
+def main() -> None:
+    config = parse_args()
+    run_research(config)
+
 
 if __name__ == "__main__":
-    asyncio.run(main())
+    main()

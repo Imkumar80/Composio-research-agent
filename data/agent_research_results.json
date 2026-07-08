@@ -1,1 +1,18 @@
-[]
+[
+  {
+    "app": "Stripe",
+    "category": "Finance and Fintech",
+    "one_line": "Stripe provides APIs for internet businesses to accept payments, send payouts, and manage their business online, offering a comprehensive suite of payment processing and financial services.",
+    "auth": "API Key (Secret Key and Publishable Key). Secret keys are used for server-side operations and should be kept confidential. Publishable keys are for client-side operations (e.g., collecting card details). Stripe also supports Webhooks for event notifications.",
+    "self_serve": "Self-serve trial. Developers can sign up for a Stripe account and immediately obtain API keys for testing and development. Live mode requires activation with business information.",
+    "api_surface": "Payments (one-time, recurring), Subscriptions, Connect (platform payments), Billing, Invoicing, Checkout, Radar (fraud protection), Sigma (data analytics), Issuing (card creation), Treasury (financial accounts), Tax, Identity verification, Refunds, Disputes, Payouts, Financial Reporting, Webhooks.",
+    "mcp": "Stripe Developers community forum, Stack Overflow, Twitter.",
+    "verdict": "Buildable",
+    "blocker": "None",
+    "evidence": "https://stripe.com/docs/api\nhttps://stripe.com/docs/keys\nhttps://stripe.com/docs/webhooks\nhttps://stripe.com/docs/developer-resources\nhttps://stripe.com/docs/api-reference",
+    "status": "ok",
+    "raw_result": "```json\n{\n  \"category\": \"Finance and Fintech\",\n  \"one_line\": \"Stripe provides APIs for internet businesses to accept payments, send payouts, and manage their business online, offering a comprehensive suite of payment processing and financial services.\",\n  \"auth\": \"API Key (Secret Key and Publishable Key). Secret keys are used for server-side operations and should be kept confidential. Publishable keys are for client-side operations (e.g., collecting card details). Stripe also supports Webhooks for event notifications.\",\n  \"self_serve\": \"Self-serve trial. Developers can sign up for a Stripe account and immediately obtain API keys for testing and development. Live mode requires activation with business information.\",\n  \"api_surface\": \"Payments (one-time, recurring), Subscriptions, Connect (platform payments), Billing, Invoicing, Checkout, Radar (fraud protection), Sigma (data analytics), Issuing (card creation), Treasury (financial accounts), Tax, Identity verification, Refunds, Disputes, Payouts, Financial Reporting, Webhooks.\",\n  \"mcp\": \"Stripe Developers community forum, Stack Overflow, Twitter.\",\n  \"verdict\": \"Buildable\",\n  \"blocker\": \"None\",\n  \"evidence\": \"https://stripe.com/docs/api\\nhttps://stripe.com/docs/keys\\nhttps://stripe.com/docs/webhooks\\nhttps://stripe.com/docs/developer-resources\\nhttps://stripe.com/docs/api-reference\"\n}\n```",
+    "researched_at": "2026-07-08T20:54:33Z",
+    "duration_s": 4.3
+  }
+]
